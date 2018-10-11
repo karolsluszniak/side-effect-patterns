@@ -1,4 +1,4 @@
-class Subject
+class Service
   def call
     num = rand(10)
     puts "Generated #{num}"

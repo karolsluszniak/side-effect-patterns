@@ -109,9 +109,9 @@ module Calendar
   end
 
   class CreateInvoiceTransactionHandler < Pubsub::Handler
-    subscribe_to Sales::CreateInvoiceTransactionEvent
+    subscribes_to Sales::CreateInvoiceTransactionEvent
 
-    def handle
+    def call
       appointment = Appointment.find(payload.appointment_id)
       CompleteAppointmentService.new(appointment).call
     end
@@ -159,18 +159,18 @@ module Customers
   end
 
   class CreateInvoiceTransactionHandler < Pubsub::Handler
-    subscribe_to Sales::CreateInvoiceTransactionEvent
+    subscribes_to Sales::CreateInvoiceTransactionEvent
 
-    def handle
+    def call
       customer = Customer.find(payload.customer_id)
       MarkCustomerActiveService.new(customer).call
     end
   end
 
   class CompleteAppointmentTransactionHandler < Pubsub::Handler
-    subscribe_to Calendar::CompleteAppointmentTransactionEvent
+    subscribes_to Calendar::CompleteAppointmentTransactionEvent
 
-    def handle
+    def call
       customer = Customer.find(payload.customer_id)
       MarkCustomerConfirmedService.new(customer).call
     end
@@ -191,9 +191,9 @@ module Inventory
   end
 
   class CreateInvoiceTransactionHandler < Pubsub::Handler
-    subscribe_to Sales::CreateInvoiceTransactionEvent
+    subscribes_to Sales::CreateInvoiceTransactionEvent
 
-    def handle
+    def call
       DecreaseInvoicedStockService.new(payload.product_ids).call
     end
   end
@@ -225,17 +225,17 @@ module Analytics
   end
 
   class CreateInvoiceTransactionHandler < Pubsub::Handler
-    subscribe_to Sales::CreateInvoiceTransactionEvent
+    subscribes_to Sales::CreateInvoiceTransactionEvent
 
-    def handle
+    def call
       IncreaseInvoiceAccumulatorService.new(payload.provider_id).call
     end
   end
 
   class CompleteAppointmentTransactionHandler < Pubsub::Handler
-    subscribe_to Calendar::CompleteAppointmentTransactionEvent
+    subscribes_to Calendar::CompleteAppointmentTransactionEvent
 
-    def handle
+    def call
       IncreaseCompletedAppointmentAccumulatorService.new(payload.provider_id).call
     end
   end

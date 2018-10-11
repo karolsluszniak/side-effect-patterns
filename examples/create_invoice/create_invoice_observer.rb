@@ -44,14 +44,14 @@ module Sales
   end
 
   class CreateInvoiceTransactionSignal < Observer::Signal
-    observed_in %w[Calendar Customers Inventory Analytics]
+    emits_into %w[Calendar Customers Inventory Analytics]
 
     # ...or if we don't stick to naming convention:
     #
-    # observed_by "Calendar::CreateInvoiceTransactionObserver"
-    # observed_by "Customers::CreateInvoiceTransactionObserver"
-    # observed_by "Inventory::CreateInvoiceTransactionObserver"
-    # observed_by "Analytics::CreateInvoiceTransactionObserver"
+    # emits_to "Calendar::CreateInvoiceTransactionObserver"
+    # emits_to "Customers::CreateInvoiceTransactionObserver"
+    # emits_to "Inventory::CreateInvoiceTransactionObserver"
+    # emits_to "Analytics::CreateInvoiceTransactionObserver"
 
     attr_reader :provider_id, :appointment_id, :customer_id, :product_ids
 
@@ -109,7 +109,7 @@ module Calendar
   end
 
   class CompleteAppointmentTransactionSignal < Observer::Signal
-    observed_in %w[Customers Analytics]
+    emits_into %w[Customers Analytics]
 
     attr_reader :provider_id, :customer_id
 
@@ -120,7 +120,7 @@ module Calendar
   end
 
   class CreateInvoiceTransactionObserver < Observer::Observer
-    def handle
+    def call
       appointment = Appointment.find(payload.appointment_id)
       CompleteAppointmentService.new(appointment).call
     end
@@ -168,14 +168,14 @@ module Customers
   end
 
   class CreateInvoiceTransactionObserver < Observer::Observer
-    def handle
+    def call
       customer = Customer.find(payload.customer_id)
       MarkCustomerActiveService.new(customer).call
     end
   end
 
   class CompleteAppointmentTransactionObserver < Observer::Observer
-    def handle
+    def call
       customer = Customer.find(payload.customer_id)
       MarkCustomerConfirmedService.new(customer).call
     end
@@ -196,7 +196,7 @@ module Inventory
   end
 
   class CreateInvoiceTransactionObserver < Observer::Observer
-    def handle
+    def call
       DecreaseInvoicedStockService.new(payload.product_ids).call
     end
   end
@@ -228,13 +228,13 @@ module Analytics
   end
 
   class CreateInvoiceTransactionObserver < Observer::Observer
-    def handle
+    def call
       IncreaseInvoiceAccumulatorService.new(payload.provider_id).call
     end
   end
 
   class CompleteAppointmentTransactionObserver < Observer::Observer
-    def handle
+    def call
       IncreaseCompletedAppointmentAccumulatorService.new(payload.provider_id).call
     end
   end

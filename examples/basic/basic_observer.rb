@@ -1,10 +1,10 @@
 require_relative "../../lib/observer/main.rb"
 
-class Subject
+class Service
   def call
     num = rand(10)
     puts "Generated #{num}"
-    SubjectSignal.new(num).emit
+    ServiceSignal.new(num).emit
     puts "Completed"
   end
 end
@@ -19,8 +19,8 @@ class SideEffect
   end
 end
 
-class SubjectSignal < Observer::Signal
-  observed_by "SubjectObserver"
+class ServiceSignal < Observer::Signal
+  emits_to "ServiceObserver"
 
   attr_accessor :num
 
@@ -29,8 +29,8 @@ class SubjectSignal < Observer::Signal
   end
 end
 
-class SubjectObserver < Observer::Observer
-  def handle
+class ServiceObserver < Observer::Observer
+  def call
     SideEffect.new(payload.num).call
   end
 end

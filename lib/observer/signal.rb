@@ -1,9 +1,9 @@
 module Observer
 class Signal
   class << self
-    def observed_by(observer)
+    def emits_to(observer)
       if observer.is_a?(Array)
-        return observer.each { |it_observer| observed_by(it_observer) }
+        return observer.each { |it_observer| emits_to(it_observer) }
       end
 
       check_observer_type(observer)
@@ -12,15 +12,15 @@ class Signal
       observers.push(observer)
     end
 
-    def observed_in(prefix)
+    def emits_into(prefix)
       if prefix.is_a?(Array)
-        return prefix.each { |it_prefix| observed_in(it_prefix) }
+        return prefix.each { |it_prefix| emits_into(it_prefix) }
       end
 
       check_prefix_type(prefix)
 
       suffix = self.to_s.split("::").last.sub(/Signal$/, "Observer")
-      observed_by("#{prefix}::#{suffix}")
+      emits_to("#{prefix}::#{suffix}")
     end
 
     def remove_observer(observer)
@@ -29,11 +29,11 @@ class Signal
       observers.delete(observer)
     end
 
-    def emit_signal(signal)
+    def emit(signal)
       observers.each do |observer|
         observer_class = self.const_get(observer)
         observer_instance = observer_class.new(signal)
-        observer_instance.handle
+        observer_instance.call
       end
     end
 
@@ -64,7 +64,7 @@ class Signal
   end
 
   def emit
-    self.class.emit_signal(self)
+    self.class.emit(self)
   end
 end
 end

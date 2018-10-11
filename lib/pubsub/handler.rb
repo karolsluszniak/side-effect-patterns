@@ -1,9 +1,9 @@
 module Pubsub
 class Handler
   class << self
-    def subscribe_to(event)
+    def subscribes_to(event)
       Pubsub.on(event) do |payload|
-        self.new(event, payload).handle
+        self.new(event, payload).call
       end
     end
   end

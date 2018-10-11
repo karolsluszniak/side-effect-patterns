@@ -1,10 +1,10 @@
 require_relative "../../lib/pubsub/pubsub.rb"
 
-class Subject
+class Service
   def call
     num = rand(10)
     puts "Generated #{num}"
-    SubjectEvent.new(num).emit
+    ServiceEvent.new(num).emit
     puts "Completed"
   end
 end
@@ -19,7 +19,7 @@ class SideEffect
   end
 end
 
-class SubjectEvent < Pubsub::Event
+class ServiceEvent < Pubsub::Event
   attr_accessor :num
 
   def initialize(num)
@@ -27,10 +27,10 @@ class SubjectEvent < Pubsub::Event
   end
 end
 
-class SubjectHandler < Pubsub::Handler
-  subscribe_to SubjectEvent
+class ServiceHandler < Pubsub::Handler
+  subscribes_to "ServiceEvent"
 
-  def handle
+  def call
     SideEffect.new(payload.num).call
   end
 end

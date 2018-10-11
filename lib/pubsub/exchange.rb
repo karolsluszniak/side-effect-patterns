@@ -1,5 +1,5 @@
 module Pubsub
-class Hub
+class Exchange
 class << self
   def event_handlers
     @event_handlers ||= {}
@@ -7,14 +7,14 @@ class << self
   end
 
   def emit(event, payload = nil)
-    event_handlers[event]&.each do |handler|
+    event_handlers[event.to_s]&.each do |handler|
       handler.call(payload)
     end
   end
 
   def on(event, &block)
-    event_handlers[event] ||= []
-    event_handlers[event].push(block)
+    event_handlers[event.to_s] ||= []
+    event_handlers[event.to_s].push(block)
   end
 end
 end
