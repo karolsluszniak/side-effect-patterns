@@ -23,7 +23,7 @@ module Sales
       # begin transaction
 
       invoice = Invoice.new
-      invoice.number = sprintf("%06d", rand * 1000000)
+      invoice.number = sprintf("%06d", rand * 1_000_000)
 
       appointment = Calendar.get_appointment(@appointment_id)
       invoice.appointment_id = appointment.id
@@ -33,9 +33,9 @@ module Sales
 
       puts "[Sales] Invoice #{invoice.number} built"
 
-      CreateInvoiceTransactionSignal.new(invoice).emit
-
       invoice.save
+
+      InvoiceCreatedSignal.new(invoice).emit
 
       # commit transaction
 
@@ -43,15 +43,15 @@ module Sales
     end
   end
 
-  class CreateInvoiceTransactionSignal < Observer::Signal
+  class InvoiceCreatedSignal < Observer::Signal
     emits_into %w[Calendar Customers Inventory Analytics]
 
-    # ...or if we don't stick to naming convention:
+    # ...or if we don't care about naming convention:
     #
-    # emits_to "Calendar::CreateInvoiceTransactionObserver"
-    # emits_to "Customers::CreateInvoiceTransactionObserver"
-    # emits_to "Inventory::CreateInvoiceTransactionObserver"
-    # emits_to "Analytics::CreateInvoiceTransactionObserver"
+    # emits_to "Calendar::InvoiceCreatedObserver"
+    # emits_to "Customers::InvoiceCreatedObserver"
+    # emits_to "Inventory::InvoiceCreatedObserver"
+    # emits_to "Analytics::InvoiceCreatedObserver"
 
     attr_reader :provider_id, :appointment_id, :customer_id, :product_ids
 
@@ -99,7 +99,7 @@ module Calendar
       # begin transaction
 
       @appointment.status = :completed
-      CompleteAppointmentTransactionSignal.new(@appointment).emit
+      AppointmentCompletedSignal.new(@appointment).emit
       @appointment.save
 
       # commit transaction
@@ -108,7 +108,7 @@ module Calendar
     end
   end
 
-  class CompleteAppointmentTransactionSignal < Observer::Signal
+  class AppointmentCompletedSignal < Observer::Signal
     emits_into %w[Customers Analytics]
 
     attr_reader :provider_id, :customer_id
@@ -119,7 +119,7 @@ module Calendar
     end
   end
 
-  class CreateInvoiceTransactionObserver < Observer::Observer
+  class InvoiceCreatedObserver < Observer::Observer
     def call
       appointment = Appointment.find(payload.appointment_id)
       CompleteAppointmentService.new(appointment).call
@@ -167,14 +167,14 @@ module Customers
     end
   end
 
-  class CreateInvoiceTransactionObserver < Observer::Observer
+  class InvoiceCreatedObserver < Observer::Observer
     def call
       customer = Customer.find(payload.customer_id)
       MarkCustomerActiveService.new(customer).call
     end
   end
 
-  class CompleteAppointmentTransactionObserver < Observer::Observer
+  class AppointmentCompletedObserver < Observer::Observer
     def call
       customer = Customer.find(payload.customer_id)
       MarkCustomerConfirmedService.new(customer).call
@@ -195,7 +195,7 @@ module Inventory
     end
   end
 
-  class CreateInvoiceTransactionObserver < Observer::Observer
+  class InvoiceCreatedObserver < Observer::Observer
     def call
       DecreaseInvoicedStockService.new(payload.product_ids).call
     end
@@ -227,13 +227,13 @@ module Analytics
     end
   end
 
-  class CreateInvoiceTransactionObserver < Observer::Observer
+  class InvoiceCreatedObserver < Observer::Observer
     def call
       IncreaseInvoiceAccumulatorService.new(payload.provider_id).call
     end
   end
 
-  class CompleteAppointmentTransactionObserver < Observer::Observer
+  class AppointmentCompletedObserver < Observer::Observer
     def call
       IncreaseCompletedAppointmentAccumulatorService.new(payload.provider_id).call
     end

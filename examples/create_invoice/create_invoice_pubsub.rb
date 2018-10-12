@@ -33,7 +33,7 @@ module Sales
 
       puts "[Sales] Invoice #{invoice.number} built"
 
-      CreateInvoiceTransactionEvent.new(invoice).emit
+      InvoiceCreatedEvent.new(invoice).emit
 
       invoice.save
 
@@ -43,7 +43,7 @@ module Sales
     end
   end
 
-  class CreateInvoiceTransactionEvent < Pubsub::Event
+  class InvoiceCreatedEvent < Pubsub::Event
     attr_reader :provider_id, :appointment_id, :customer_id, :product_ids
 
     def initialize(invoice)
@@ -90,7 +90,7 @@ module Calendar
       # begin transaction
 
       @appointment.status = :completed
-      CompleteAppointmentTransactionEvent.new(@appointment).emit
+      AppointmentCompletedEvent.new(@appointment).emit
       @appointment.save
 
       # commit transaction
@@ -99,7 +99,7 @@ module Calendar
     end
   end
 
-  class CompleteAppointmentTransactionEvent < Pubsub::Event
+  class AppointmentCompletedEvent < Pubsub::Event
     attr_reader :provider_id, :customer_id
 
     def initialize(appointment)
@@ -108,8 +108,8 @@ module Calendar
     end
   end
 
-  class CreateInvoiceTransactionHandler < Pubsub::Handler
-    subscribes_to Sales::CreateInvoiceTransactionEvent
+  class InvoiceCreatedHandler < Pubsub::Handler
+    subscribes_to Sales::InvoiceCreatedEvent
 
     def call
       appointment = Appointment.find(payload.appointment_id)
@@ -158,8 +158,8 @@ module Customers
     end
   end
 
-  class CreateInvoiceTransactionHandler < Pubsub::Handler
-    subscribes_to Sales::CreateInvoiceTransactionEvent
+  class InvoiceCreatedHandler < Pubsub::Handler
+    subscribes_to Sales::InvoiceCreatedEvent
 
     def call
       customer = Customer.find(payload.customer_id)
@@ -167,8 +167,8 @@ module Customers
     end
   end
 
-  class CompleteAppointmentTransactionHandler < Pubsub::Handler
-    subscribes_to Calendar::CompleteAppointmentTransactionEvent
+  class AppointmentCompletedHandler < Pubsub::Handler
+    subscribes_to Calendar::AppointmentCompletedEvent
 
     def call
       customer = Customer.find(payload.customer_id)
@@ -190,8 +190,8 @@ module Inventory
     end
   end
 
-  class CreateInvoiceTransactionHandler < Pubsub::Handler
-    subscribes_to Sales::CreateInvoiceTransactionEvent
+  class InvoiceCreatedHandler < Pubsub::Handler
+    subscribes_to Sales::InvoiceCreatedEvent
 
     def call
       DecreaseInvoicedStockService.new(payload.product_ids).call
@@ -224,16 +224,16 @@ module Analytics
     end
   end
 
-  class CreateInvoiceTransactionHandler < Pubsub::Handler
-    subscribes_to Sales::CreateInvoiceTransactionEvent
+  class InvoiceCreatedHandler < Pubsub::Handler
+    subscribes_to Sales::InvoiceCreatedEvent
 
     def call
       IncreaseInvoiceAccumulatorService.new(payload.provider_id).call
     end
   end
 
-  class CompleteAppointmentTransactionHandler < Pubsub::Handler
-    subscribes_to Calendar::CompleteAppointmentTransactionEvent
+  class AppointmentCompletedHandler < Pubsub::Handler
+    subscribes_to Calendar::AppointmentCompletedEvent
 
     def call
       IncreaseCompletedAppointmentAccumulatorService.new(payload.provider_id).call
